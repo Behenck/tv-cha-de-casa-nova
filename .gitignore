@@ -1,0 +1,5 @@
+.env
+node_modules/
+data/
+cartaz.pdf
+.claude/settings.local.json

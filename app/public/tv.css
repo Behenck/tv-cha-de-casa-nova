@@ -1,0 +1,96 @@
+/* Telão: tudo em vh/vw para escalar em qualquer TV 16:9. Só transform/opacity animam. */
+html, body { height: 100%; overflow: hidden; cursor: none; background: var(--espresso); }
+
+#palco { position: fixed; inset: 0 0 12vh 0; overflow: hidden; background: var(--cream); }
+.cena { position: absolute; inset: 0; overflow: hidden; }
+.cena.clara {
+  background:
+    radial-gradient(90vw 70vh at 30% 40%, #FFFBF4 0%, transparent 70%),
+    linear-gradient(160deg, var(--cream), var(--surface));
+}
+.cena.escura { background: radial-gradient(80vw 80vh at 50% 45%, #3A2618 0%, var(--espresso) 75%); color: #F3E6D6; }
+
+.ramo { position: absolute; width: 30vh; pointer-events: none; opacity: .9; }
+.ramo.tr { top: -2vh; right: -2vh; }
+.ramo.bl { bottom: -2vh; left: -2vh; }
+
+.selo {
+  position: absolute; top: 3.2vh; left: 3vw; z-index: 50; font-size: 1.5vh;
+  padding: 1vh 1.6vh; border-radius: 999px; background: rgba(247, 240, 230, .92);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* ---------- barra fixa ---------- */
+#barra {
+  position: fixed; inset: auto 0 0 0; height: 12vh; z-index: 20;
+  display: flex; align-items: center; gap: 2.2vw; padding: 0 23vh 0 2.4vw;
+  background: var(--espresso); color: #F3E6D6;
+  box-shadow: 0 -1px 0 rgba(243, 230, 214, .14);
+}
+#barra .mono { height: 9vh; width: 9vh; border-radius: 50%; background: var(--cream); padding: .4vh; }
+#barra .quem { white-space: nowrap; display: flex; flex-direction: column; gap: .2vh; }
+#barra .quem .script { font-size: 4.6vh; color: var(--cream); }
+#barra .eyebrow { font-size: 1.45vh; color: var(--latte); }
+#barra .convite-foto { margin-left: auto; text-align: right; display: flex; flex-direction: column; gap: .6vh; }
+#barra .como { white-space: nowrap; font-size: 2.7vh; font-style: italic; color: var(--cream); }
+#qr {
+  position: absolute; right: 2vh; bottom: 1.6vh; width: 19vh; height: 19vh;
+  background: var(--cream); padding: 1vh; border-radius: 2.2vh;
+  box-shadow: 0 2vh 4vh -1.5vh rgba(0, 0, 0, .7), 0 0 0 1px var(--line);
+}
+
+/* ---------- boas-vindas ---------- */
+.boasvindas { display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; padding: 0 7vw; gap: 5vw; }
+.boasvindas .lado { text-align: center; }
+.boasvindas .logo { height: 26vh; }
+.boasvindas h1 { margin: 0; font-weight: 400; font-size: 13vh; line-height: 1; color: var(--ink); }
+.boasvindas .nomes { font-size: 4.2vh; font-weight: 500; margin-top: 1vh; }
+.boasvindas .eyebrow { font-size: 1.7vh; }
+.passos { list-style: none; margin: 3vh 0 0; padding: 0; display: grid; gap: 3.4vh; }
+.passos li { display: grid; grid-template-columns: 8vh 1fr; align-items: center; gap: 2.4vh; font-size: 4.4vh; line-height: 1.15; }
+.passos b {
+  width: 8vh; height: 8vh; border-radius: 50%; display: grid; place-items: center;
+  background: var(--brown); color: var(--cream); font-family: var(--f-ui); font-weight: 500; font-size: 3.4vh;
+}
+.passos small { display: block; font-size: 2.6vh; color: var(--muted); font-style: italic; }
+.boasvindas .seta { margin-top: 4vh; font-size: 2vh; }
+
+/* ---------- destaque ---------- */
+.slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 5vw; padding: 5vh 6vw 6vh; }
+.quadro {
+  flex: none; padding: 1.5vh; background: #FFFDF9; border-radius: 6px;
+  box-shadow: 0 5vh 8vh -5vh rgba(63, 38, 23, .65), 0 0 0 1px var(--line);
+}
+.quadro .janela { overflow: hidden; border-radius: 3px; }
+.quadro img { display: block; }
+.texto { flex: 0 1 30vw; min-width: 22vw; padding-bottom: 6vh; }
+.texto .eyebrow { font-size: 1.6vh; }
+.texto .nome { font-size: 11vh; color: var(--ink); margin: 1.2vh 0 0; overflow-wrap: anywhere; }
+.texto .recado { font-size: 4.3vh; font-style: italic; line-height: 1.25; color: var(--brown); margin: 2.5vh 0 0; overflow-wrap: anywhere; }
+.texto .fio { width: 9vh; height: 1px; background: var(--caramel); margin-top: 3vh; }
+.texto .canal { font-family: var(--f-ui); font-size: 1.7vh; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-top: 1.6vh; }
+.escura .texto .nome { color: var(--cream); }
+.escura .texto .recado { color: var(--latte); }
+.escura .texto .canal { color: var(--latte); }
+.escura .quadro { box-shadow: 0 5vh 9vh -4vh rgba(0, 0, 0, .8); }
+
+/* ---------- mural ---------- */
+.mural { display: flex; gap: 1.6vh; padding: 0 1.6vh; background: var(--espresso); }
+.coluna { flex: 1; min-width: 0; }
+.trilho { display: flex; flex-direction: column; animation: sobe linear infinite; will-change: transform; }
+.coluna:nth-child(even) .trilho { animation-name: desce; }
+.trilho img { width: 100%; display: block; border-radius: 2.2vh; margin-bottom: 1.6vh; }
+@keyframes sobe { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@keyframes desce { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.mural::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(var(--espresso), transparent 12%, transparent 88%, var(--espresso));
+}
+
+/* ---------- polaroides ---------- */
+.polaroide {
+  position: absolute; width: 17vw; padding: 1.2vh 1.2vh 0; background: #FFFDF9; border-radius: 4px;
+  box-shadow: 0 3vh 5vh -3vh rgba(63, 38, 23, .7), 0 0 0 1px rgba(63, 38, 23, .08);
+}
+.polaroide img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border-radius: 2px; }
+.polaroide span { display: block; text-align: center; font-size: 3.6vh; line-height: 6vh; height: 6vh; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ink); }

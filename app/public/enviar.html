@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mande sua foto · Chá de Casa Nova</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+  body { min-height: 100svh; display: grid; place-items: center; padding: 24px 16px; text-align: center; }
+  main { width: 100%; max-width: 420px; display: grid; gap: 16px; }
+  img.logo { width: 120px; margin: 0 auto; }
+  h1 { font-size: 56px; margin: 0; font-weight: 400; }
+  p { font-size: 20px; margin: 0; }
+  .eyebrow { font-size: 12px; }
+  input[type=text] { font: 18px var(--f-ui); padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: #FFFDF9; color: var(--ink); width: 100%; }
+  .btn { width: 100%; min-height: 56px; font-size: 14px; }
+  #previa { max-width: 100%; max-height: 40svh; border-radius: 14px; margin: 0 auto; }
+  #msg { min-height: 1.4em; font-style: italic; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="/assets/logo.webp" alt="Monograma M&D">
+  <p class="eyebrow">Apareça no telão</p>
+  <h1 class="script">Mande sua foto</h1>
+  <div id="canais" style="display:grid;gap:12px" hidden>
+    <a class="btn" id="wa" hidden>Mandar pelo WhatsApp</a>
+    <a class="btn" id="ig" href="#" hidden></a>
+    <p class="eyebrow">ou envie por aqui</p>
+  </div>
+  <form id="f">
+    <div style="display:grid;gap:12px">
+      <input type="file" id="arq" accept="image/*" hidden>
+      <img id="previa" alt="" hidden>
+      <button type="button" class="btn ghost" id="escolher">Escolher ou tirar foto</button>
+      <input type="text" name="nome" placeholder="Seu nome" maxlength="40" autocomplete="given-name" required>
+      <input type="text" name="legenda" placeholder="Um recadinho (opcional)" maxlength="200">
+      <button class="btn" id="enviar" disabled>Enviar para a TV</button>
+    </div>
+  </form>
+  <p id="msg" role="status"></p>
+</main>
+<script type="module">
+const $ = (s) => document.querySelector(s);
+let blob;
+
+// WhatsApp / Instagram (configurados no painel); se faltar, fica só o envio web.
+fetch('/api/fotos').then((r) => r.json()).then(({ config: c }) => {
+  if (c.wa) Object.assign($('#wa'), { hidden: false, href: `https://wa.me/${c.wa}?text=${encodeURIComponent('Oi! Vou mandar minha foto pro telão 📸')}` });
+  if (c.instagram) {
+    Object.assign($('#ig'), { hidden: false, textContent: `Postar no Instagram · marque @${c.instagram}` });
+    $('#ig').onclick = (e) => {
+      e.preventDefault();
+      navigator.clipboard?.writeText(`@${c.instagram}`).catch(() => {});
+      $('#msg').textContent = `Copiamos @${c.instagram} — cole no seu story!`;
+      location.href = 'instagram://story-camera';
+      setTimeout(() => { if (!document.hidden) location.href = `https://www.instagram.com/${c.instagram}`; }, 1500);
+    };
+  }
+  $('#canais').hidden = !(c.wa || c.instagram);
+}).catch(() => {});
+
+// Reduz no celular: fotos de 12 MB viram ~300 KB e já saem em JPEG com a orientação certa.
+async function reduzir(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const c = Object.assign(document.createElement('canvas'), { width: bmp.width * k, height: bmp.height * k });
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.85));
+}
+
+$('#escolher').onclick = () => $('#arq').click();
+$('#arq').onchange = async () => {
+  const file = $('#arq').files[0];
+  if (!file) return;
+  try {
+    blob = await reduzir(file);
+    $('#previa').src = URL.createObjectURL(blob);
+    $('#previa').hidden = false;
+    $('#enviar').disabled = false;
+    $('#msg').textContent = '';
+  } catch { $('#msg').textContent = 'Não consegui abrir essa imagem. Tente outra.'; }
+};
+
+$('#f').onsubmit = async (e) => {
+  e.preventDefault();
+  $('#enviar').disabled = true;
+  $('#msg').textContent = 'Enviando…';
+  const q = new URLSearchParams({ nome: e.target.nome.value, legenda: e.target.legenda.value });
+  try {
+    const r = await fetch(`/api/enviar?${q}`, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+    const { status } = await r.json();
+    $('#msg').textContent = {
+      aprovada: 'Recebemos! Olha pra TV 👀',
+      revisao: 'Recebemos! Ela aparece na TV assim que for conferida.',
+      reprovada: 'Essa não vai dar pra mostrar na TV 😅 Manda outra?',
+      pausado: 'O telão não está recebendo fotos agora.',
+    }[status] || 'Não deu certo. Tente de novo.';
+    if (r.ok) { $('#previa').hidden = true; e.target.legenda.value = ''; blob = null; return; }
+  } catch { $('#msg').textContent = 'Sem conexão. Tente de novo.'; }
+  $('#enviar').disabled = false;
+};
+</script>
+</body>
+</html>

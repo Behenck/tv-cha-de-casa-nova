@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cartaz · Mande sua foto</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+  @page { size: A4; margin: 0; }
+  html { background: #888; overflow: auto; } /* sem isso o overflow do body vaza para a janela */
+  body {
+    width: 210mm; height: 297mm; margin: 0 auto; position: relative; overflow: hidden;
+    background: var(--cream); text-align: center; padding: 20mm 20mm 0;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .ramo { position: absolute; width: 62mm; }
+  .ramo.tr { top: -4mm; right: -4mm; } .ramo.bl { bottom: -4mm; left: -4mm; }
+  .logo { width: 34mm; }
+  .eyebrow { font-size: 9pt; margin: 4mm 0 0; }
+  h1 { font-size: 62pt; font-weight: 400; margin: 1mm 0 0; color: var(--ink); }
+  .sub { font-size: 17pt; font-style: italic; color: var(--brown); margin: 1mm 0 0; }
+  .qr { width: 78mm; height: 78mm; margin: 8mm auto 0; padding: 5mm; background: #fff; border-radius: 6mm; border: .3mm solid var(--line); }
+  .qr img { width: 100%; height: 100%; display: block; }
+  ol { list-style: none; padding: 0; margin: 8mm auto 0; width: 150mm; display: grid; gap: 4.5mm; text-align: left; }
+  li { display: grid; grid-template-columns: 12mm 1fr; gap: 5mm; align-items: center; font-size: 17pt; line-height: 1.2; }
+  li b { width: 12mm; height: 12mm; border-radius: 50%; background: var(--brown); color: var(--cream); display: grid; place-items: center; font: 500 13pt var(--f-ui); }
+  li small { display: block; font-size: 12pt; font-style: italic; color: var(--muted); }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 14mm; }
+  .rodape .script { font-size: 26pt; }
+  .rodape .eyebrow { font-size: 8pt; }
+  #insta { font-size: 13pt; color: var(--brown); margin-top: 5mm; }
+  @media screen { body { margin: 10mm auto; box-shadow: 0 4mm 12mm rgba(0, 0, 0, .4); } }
+</style>
+</head>
+<body>
+  <img class="ramo tr" src="/assets/branch_tr.webp" alt="">
+  <img class="ramo bl" src="/assets/branch_bl.webp" alt="">
+  <img class="logo" src="/assets/logo.webp" alt="Monograma M&D">
+  <p class="eyebrow">Chá de Casa Nova · Milene &amp; Denilson</p>
+  <h1 class="script">Apareça na TV</h1>
+  <p class="sub">mande sua foto e veja ela no telão</p>
+  <div class="qr"><img src="/qr.svg" alt="QR code"></div>
+  <ol id="passos"></ol>
+  <p id="insta" hidden></p>
+  <div class="rodape">
+    <div class="script">com carinho, Milene e Denilson</div>
+    <p class="eyebrow">21 e 22 de novembro de 2026</p>
+  </div>
+<script type="module">
+const { config } = await (await fetch('/api/fotos')).json();
+const passos = config.whatsapp
+  ? [['Aponte a câmera do celular para o QR code', `ou chame no WhatsApp ${config.whatsapp}`],
+     ['Mande sua foto na conversa', 'pode escrever um recadinho junto'],
+     ['Olhe para a TV', 'ela aparece em instantes']]
+  : [['Aponte a câmera do celular para o QR code', 'abre uma página, não precisa instalar nada'],
+     ['Escolha a foto e escreva seu nome', 'pode deixar um recadinho também'],
+     ['Olhe para a TV', 'ela aparece em instantes']];
+document.querySelector('#passos').append(...passos.map(([t, s], i) => {
+  const li = document.createElement('li'), b = document.createElement('b'), d = document.createElement('div'), sm = document.createElement('small');
+  b.textContent = i + 1; d.textContent = t; sm.textContent = s; d.append(sm); li.append(b, d);
+  return li;
+}));
+if (config.instagram) {
+  const p = document.querySelector('#insta');
+  p.textContent = `No Instagram? Marque @${config.instagram} no seu story.`;
+  p.hidden = false;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel · Chá de Casa Nova</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+  body { font-family: var(--f-ui); font-size: 16px; padding: 16px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-family: var(--f-script); font-weight: 400; font-size: 44px; margin: 8px 0 0; }
+  h2 { font-family: var(--f-display); font-weight: 500; font-size: 24px; margin: 0 0 12px; }
+  section { background: #FFFDF9; border: 1px solid var(--line); border-radius: 22px; padding: 20px; margin-top: 16px; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  input, select, textarea { font: inherit; color: var(--ink); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--cream); width: 100%; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .pilula { padding: 6px 12px; border-radius: 999px; background: var(--sand); font-size: 13px; }
+  .pilula.ok { background: #DDE8D2; } .pilula.ruim { background: #F1D3C8; }
+  .abas button { font: inherit; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  .abas button[aria-pressed="true"] { background: var(--brown); color: var(--cream); border-color: var(--brown); }
+  #fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-top: 16px; }
+  figure { margin: 0; background: var(--cream); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  figure img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--sand); }
+  figcaption { padding: 10px; font-size: 13px; display: grid; gap: 6px; flex: 1; }
+  figcaption b { font-size: 15px; } figcaption i { color: var(--muted); overflow-wrap: anywhere; }
+  figure .btn { min-height: 38px; font-size: 11px; padding: 0 12px; margin: 0 10px 10px; }
+  #qrbox img { width: 240px; max-width: 100%; border-radius: 12px; border: 1px solid var(--line); }
+  #aviso { color: #9A3B22; min-height: 1.2em; font-size: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<h1>Painel do telão</h1>
+
+<section id="login" hidden>
+  <h2>Entrar</h2>
+  <form class="linha" id="fLogin">
+    <label style="flex:1">Senha <input type="password" name="senha" autocomplete="current-password" required></label>
+    <button class="btn">Entrar</button>
+  </form>
+  <p id="aviso"></p>
+</section>
+
+<div id="app" hidden>
+  <section>
+    <h2>Agora</h2>
+    <div class="linha">
+      <span class="pilula" id="pWhats">WhatsApp…</span>
+      <span class="pilula" id="pInsta">Instagram…</span>
+      <span class="pilula" id="pTelas">Telas…</span>
+      <button class="btn ghost" id="bConectar" hidden>Conectar WhatsApp</button>
+      <a class="btn ghost" href="/tv" target="_blank">Abrir telão</a>
+      <a class="btn ghost" href="/cartaz" target="_blank">Cartaz para imprimir</a>
+    </div>
+    <div id="qrbox" hidden>
+      <p>No celular da festa: WhatsApp → Aparelhos conectados → Conectar aparelho.</p>
+      <img alt="QR code de pareamento do WhatsApp">
+    </div>
+  </section>
+
+  <section>
+    <h2>Configurações</h2>
+    <form id="fConfig">
+      <div class="grade">
+        <label>Dia mostrado na TV
+          <select name="dia_exibido"><option value="auto">Automático (dia de hoje)</option><option value="21">Dia 21</option><option value="22">Dia 22</option><option value="ambos">Os dois dias</option></select></label>
+        <label>Segundos por foto <input type="number" name="segundos_por_foto" min="3" max="30"></label>
+        <label>Rigor da moderação
+          <select name="rigor"><option value="normal">Normal</option><option value="alto">Alto (só fotos da festa)</option></select></label>
+        <label>Recebimento
+          <select name="pausado"><option value="0">Recebendo fotos</option><option value="1">Pausado</option></select></label>
+        <label>QR code leva para
+          <select name="qr_destino"><option value="escolha">Convidado escolhe: WhatsApp ou Instagram</option><option value="whatsapp">Direto no WhatsApp da festa</option><option value="web">Página de envio (plano B)</option></select></label>
+        <label>Número do WhatsApp (com 55 e DDD, só dígitos) <input name="whatsapp_numero" inputmode="numeric" placeholder="5555999999999"></label>
+        <label>@ do Instagram (sem @; vazio esconde) <input name="instagram_usuario"></label>
+      </div>
+      <div class="grade" style="margin-top:14px">
+        <label>Resposta: foto aprovada <textarea name="msg_aprovada" rows="2"></textarea></label>
+        <label>Resposta: foto reprovada <textarea name="msg_reprovada" rows="2"></textarea></label>
+        <label>Resposta: mensagem sem foto <textarea name="msg_ajuda" rows="2"></textarea></label>
+      </div>
+      <div class="linha" style="margin-top:14px"><button class="btn">Salvar</button><span id="salvo"></span></div>
+    </form>
+  </section>
+
+  <section>
+    <h2>Fotos</h2>
+    <div class="linha abas" id="abasDia"></div>
+    <div class="linha abas" id="abasStatus" style="margin-top:10px"></div>
+    <div class="linha" style="margin-top:10px"><a class="btn ghost" id="bZip">Baixar fotos do dia</a></div>
+    <div id="fotos"></div>
+  </section>
+</div>
+
+<script type="module">
+const $ = (s) => document.querySelector(s);
+const NOMES = { aprovada: 'Na TV', revisao: 'Aguardando', reprovada: 'Reprovadas', removida: 'Removidas', pendente: 'Analisando' };
+let estado, dia = null, status = 'revisao', mexendoNoForm = false;
+
+async function api(caminho, corpo) {
+  const r = await fetch(caminho, corpo === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+  if (r.status === 401) { $('#app').hidden = true; $('#login').hidden = false; throw new Error('login'); }
+  return r.json();
+}
+
+function el(tag, props = {}, ...filhos) {
+  const n = Object.assign(document.createElement(tag), props);
+  n.append(...filhos);
+  return n;
+}
+
+function abas(alvo, opcoes, atual, escolher) {
+  alvo.replaceChildren(...opcoes.map(([valor, rotulo]) => {
+    const b = el('button', { type: 'button', textContent: rotulo });
+    b.setAttribute('aria-pressed', String(valor === atual));
+    b.onclick = () => escolher(valor);
+    return b;
+  }));
+}
+
+function desenhar() {
+  const doDia = estado.fotos.filter((f) => f.dia === dia);
+  const conta = (s) => doDia.filter((f) => f.status === s).length;
+  abas($('#abasDia'), [21, 22].map((d) => [d, `Dia ${d} (${estado.fotos.filter((f) => f.dia === d).length})`]), dia, (d) => { dia = d; desenhar(); });
+  abas($('#abasStatus'), Object.keys(NOMES).map((s) => [s, `${NOMES[s]} (${conta(s)})`]), status, (s) => { status = s; desenhar(); });
+  $('#bZip').href = `/api/admin/zip?dia=${dia}`;
+  $('#fotos').replaceChildren(...doDia.filter((f) => f.status === status).map((f) => {
+    const acoes = [];
+    if (f.status !== 'aprovada') acoes.push(el('button', { className: 'btn', textContent: 'Colocar na TV', onclick: () => agir(f.id, 'aprovar') }));
+    if (f.status !== 'removida') acoes.push(el('button', { className: 'btn ghost', textContent: f.status === 'aprovada' ? 'Tirar da TV' : 'Descartar', onclick: () => agir(f.id, 'remover') }));
+    return el('figure', {},
+      el('img', { src: f.url, loading: 'lazy', alt: '' }),
+      el('figcaption', {}, el('b', { textContent: `${f.remetente} · ${f.canal}` }),
+        f.legenda ? el('span', { textContent: `“${f.legenda}”` }) : '',
+        el('i', { textContent: f.motivo || '' })),
+      ...acoes);
+  }));
+  if (!$('#fotos').children.length) $('#fotos').append(el('p', { textContent: 'Nada aqui.' }));
+}
+
+async function agir(id, acao) { await api(`/api/admin/fotos/${id}/${acao}`, {}); await atualizar(); }
+
+async function atualizar() {
+  estado = await api('/api/admin/estado');
+  $('#login').hidden = true; $('#app').hidden = false;
+  dia ??= estado.fotos[0]?.dia ?? 21;
+  const w = estado.whatsapp;
+  $('#pWhats').textContent = `WhatsApp: ${{ open: 'conectado', connecting: 'aguardando QR', close: 'desconectado' }[w] || 'indisponível'}`;
+  $('#pWhats').className = `pilula ${w === 'open' ? 'ok' : 'ruim'}`;
+  $('#bConectar').hidden = w === 'open' || w === 'indisponivel';
+  if (w === 'open') $('#qrbox').hidden = true;
+  $('#pInsta').textContent = `Instagram: ${estado.instagram}`;
+  $('#pInsta').className = `pilula ${estado.instagram === 'ativo' ? 'ok' : ''}`;
+  $('#pTelas').textContent = `Conexões ao vivo: ${estado.telas}`;
+  if (!mexendoNoForm) for (const [k, v] of Object.entries(estado.config)) if ($('#fConfig').elements[k]) $('#fConfig').elements[k].value = v;
+  desenhar();
+}
+
+$('#fLogin').onsubmit = async (e) => {
+  e.preventDefault();
+  const r = await fetch('/api/login', { method: 'POST', body: JSON.stringify({ senha: e.target.senha.value }) });
+  if (r.ok) return iniciar();
+  $('#aviso').textContent = (await r.json()).erro;
+};
+
+$('#fConfig').oninput = () => { mexendoNoForm = true; };
+$('#fConfig').onsubmit = async (e) => {
+  e.preventDefault();
+  const r = await api('/api/admin/config', Object.fromEntries(new FormData(e.target)));
+  mexendoNoForm = false;
+  $('#salvo').textContent = r.rejeitadas.length ? `Valor inválido em: ${r.rejeitadas.join(', ')}` : 'Salvo ✓';
+  setTimeout(() => { $('#salvo').textContent = ''; }, 4000);
+  atualizar();
+};
+
+$('#bConectar').onclick = async () => {
+  const r = await api('/api/admin/whatsapp/qr');
+  $('#qrbox').hidden = !r.qr;
+  if (r.qr) $('#qrbox img').src = r.qr; // data URL gerada pelo Evolution
+  else alert('O WhatsApp não devolveu um QR code agora. Tente de novo em alguns segundos.');
+};
+
+let ligado = false;
+async function iniciar() {
+  await atualizar();
+  if (ligado) return;
+  ligado = true;
+  new EventSource('/api/eventos').addEventListener('painel', () => atualizar().catch(() => {}));
+  setInterval(() => atualizar().catch(() => {}), 15_000);
+}
+iniciar().catch(() => {});
+</script>
+</body>
+</html>
