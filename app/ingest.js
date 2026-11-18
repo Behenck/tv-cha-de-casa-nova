@@ -54,6 +54,7 @@ async function bytes(f) {
   if (!remota(f)) return { imagem: await readFile(path.join(FOTOS, f.arquivo)), mimetype: MIME[f.arquivo.split('.').pop()] };
   const r = await fetch(f.arquivo, { signal: AbortSignal.timeout(20_000) });
   const mimetype = (r.headers.get('content-type') || '').split(';')[0];
+  if (mimetype.startsWith('video/')) throw Object.assign(new Error('story em vídeo'), { video: true });
   if (!r.ok || !EXT[mimetype]) throw new Error(`mídia remota indisponível (${r.status} ${mimetype})`);
   return { imagem: Buffer.from(await r.arrayBuffer()), mimetype };
 }
@@ -65,7 +66,9 @@ async function processar(f, responder) {
     v = await moderar({ ...(await bytes(f)), legenda: f.legenda, rigor: cfg.rigor });
   } catch (e) {
     console.error('[ingest]', e.message);
-    v = { status: 'revisao', motivo: 'Não foi possível ler a imagem', legendaOk: false };
+    v = e.video
+      ? { status: 'reprovada', motivo: 'Vídeo (só fotos vão para a TV)', legendaOk: false }
+      : { status: 'revisao', motivo: 'Não foi possível ler a imagem', legendaOk: false };
   }
   // Legenda só aparece se a IA liberou; em revisão manual ela fica guardada para o anfitrião ver.
   const legenda = v.status === 'aprovada' && !v.legendaOk ? null : f.legenda;

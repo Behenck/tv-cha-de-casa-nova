@@ -7,6 +7,9 @@ export const FOTOS = path.join(DATA, 'fotos');
 mkdirSync(FOTOS, { recursive: true });
 
 const db = new DatabaseSync(path.join(DATA, 'telao.db'));
+// Bancos antigos travavam `dia` em 21/22: renomeia e recria abaixo com a regra nova.
+if (db.prepare(`SELECT sql FROM sqlite_master WHERE name = 'fotos'`).get()?.sql.includes('dia IN (21,22)'))
+  db.exec('ALTER TABLE fotos RENAME TO fotos_antiga');
 db.exec(`
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS fotos (
@@ -18,7 +21,7 @@ db.exec(`
     legenda TEXT,
     arquivo TEXT NOT NULL,
     recebida_em TEXT NOT NULL,
-    dia INTEGER NOT NULL CHECK (dia IN (21,22)),
+    dia INTEGER NOT NULL CHECK (dia BETWEEN 1 AND 31),
     status TEXT NOT NULL DEFAULT 'pendente'
       CHECK (status IN ('pendente','aprovada','revisao','reprovada','removida')),
     motivo TEXT,
@@ -26,6 +29,8 @@ db.exec(`
   );
   CREATE TABLE IF NOT EXISTS config (chave TEXT PRIMARY KEY, valor TEXT NOT NULL);
 `);
+if (db.prepare(`SELECT 1 FROM sqlite_master WHERE name = 'fotos_antiga'`).get())
+  db.exec('INSERT INTO fotos SELECT * FROM fotos_antiga; DROP TABLE fotos_antiga;');
 
 export const PADRAO = {
   dia_exibido: 'auto',
@@ -38,6 +43,7 @@ export const PADRAO = {
   msg_aprovada: 'Recebemos sua foto! Olha pra TV 👀',
   msg_reprovada: 'Essa não vai dar pra mostrar na TV 😅 Manda outra?',
   msg_ajuda: 'Manda uma foto aqui que ela aparece na TV da festa 📸',
+  msg_video: 'Vídeo não aparece na TV 🙈 Manda uma foto!',
 };
 
 export function config() {
@@ -57,6 +63,7 @@ const VALIDO = {
   msg_aprovada: (v) => v.length <= 300,
   msg_reprovada: (v) => v.length <= 300,
   msg_ajuda: (v) => v.length <= 300,
+  msg_video: (v) => v.length <= 300,
 };
 
 // Grava só chaves conhecidas com valores válidos; devolve as chaves rejeitadas.

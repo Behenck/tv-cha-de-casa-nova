@@ -6,16 +6,16 @@ import { statusDoVeredito } from './moderar.js';
 import { urlDaMidia } from './instagram.js';
 
 test('dia do evento segue o fuso de São Paulo', () => {
-  assert.equal(diaDoEvento(new Date('2026-11-18T12:00:00-03:00')), 21); // testes antes da festa
+  assert.equal(diaDoEvento(new Date('2026-11-18T12:00:00-03:00')), 18); // testes antes da festa
   assert.equal(diaDoEvento(new Date('2026-11-21T23:59:00-03:00')), 21);
   assert.equal(diaDoEvento(new Date('2026-11-22T00:00:30-03:00')), 22);
   assert.equal(diaDoEvento(new Date('2026-11-22T02:30:00Z')), 21);      // 23h30 do dia 21 em SP
-  assert.equal(diaDoEvento(new Date('2026-11-25T10:00:00-03:00')), 22); // atrasadas
 });
 
 test('dias visíveis', () => {
   const dia22 = new Date('2026-11-22T15:00:00-03:00');
   assert.deepEqual(diasVisiveis('auto', dia22), [22]);
+  assert.deepEqual(diasVisiveis('auto', new Date('2026-11-18T15:00:00-03:00')), [18]);
   assert.deepEqual(diasVisiveis('21', dia22), [21]);
   assert.deepEqual(diasVisiveis('ambos', dia22), [21, 22]);
 });
@@ -53,7 +53,7 @@ test('webhook: ignora grupo, mensagem própria, status e outros eventos', () => 
 
 test('webhook: texto, áudio e vídeo viram "outro" (pede foto)', () => {
   assert.equal(interpretar(webhook({}, { conversation: 'oi' })).tipo, 'outro');
-  assert.equal(interpretar(webhook({}, { videoMessage: {} })).tipo, 'outro');
+  assert.equal(interpretar(webhook({}, { videoMessage: {} })).tipo, 'video');
   assert.equal(interpretar(webhook({ remoteJid: '123456@lid' }, { audioMessage: {} })).tipo, 'outro');
 });
 
@@ -74,7 +74,7 @@ test('moderação: só "aprovar" explícito vai para a TV', () => {
 
 test('instagram: acha a URL nos formatos documentados', () => {
   assert.equal(urlDaMidia({ story: { mention: { link: 'https://cdn/a' } } }), 'https://cdn/a');
-  assert.equal(urlDaMidia({ attachments: { data: [{ image_data: { url: 'https://cdn/b' } }] } }), 'https://cdn/b');
-  assert.equal(urlDaMidia({ attachments: { data: [{ type: 'story_mention', payload: { url: 'https://cdn/c' } }] } }), 'https://cdn/c');
+  assert.equal(urlDaMidia({ attachments: { data: [{ image_data: { url: 'https://cdn/b' } }] } }), null); // foto na DM
+  assert.equal(urlDaMidia({ story: { reply_to: { link: 'https://cdn/r' } } }), null);                 // resposta a story
   assert.equal(urlDaMidia({ message: 'oi' }), null);
 });

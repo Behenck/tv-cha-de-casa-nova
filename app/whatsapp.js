@@ -44,6 +44,11 @@ export async function qrWhatsapp() {
   try { return (await evo('GET', `/instance/connect/${INSTANCIA}`)).json?.base64 || null; } catch { return null; }
 }
 
+// Desliga o aparelho vinculado (sessão travada); depois é só ler o QR de novo.
+export async function desconectarWhatsapp() {
+  await evo('DELETE', `/instance/logout/${INSTANCIA}`).catch(() => null);
+}
+
 export async function enviarTexto(jid, texto) {
   try { await evo('POST', `/message/sendText/${INSTANCIA}`, { number: jid, text: texto }); }
   catch (e) { console.error('[whatsapp] falha ao responder:', e.message); }
@@ -74,7 +79,7 @@ export function interpretar(corpo) {
   };
   // Fotos de álbum podem vir embrulhadas em associatedChildMessage.
   const imagem = d.message?.imageMessage ?? d.message?.associatedChildMessage?.message?.imageMessage;
-  if (!imagem) return { ...base, tipo: 'outro' };
+  if (!imagem) return { ...base, tipo: d.message?.videoMessage || d.message?.ptvMessage ? 'video' : 'outro' };
   return {
     ...base,
     tipo: 'foto',

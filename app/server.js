@@ -7,7 +7,7 @@ import QRCode from 'qrcode';
 import { FOTOS, config, salvarConfig, foto, fotos, decidir, porArquivo } from './db.js';
 import { diasVisiveis } from './dia.js';
 import { clientes, emitir, publica, anunciar, receber, retomarPendentes } from './ingest.js';
-import { CHAVE as CHAVE_EVOLUTION, prepararWhatsapp, estadoWhatsapp, qrWhatsapp, enviarTexto, baixarMidia, interpretar } from './whatsapp.js';
+import { CHAVE as CHAVE_EVOLUTION, prepararWhatsapp, estadoWhatsapp, qrWhatsapp, desconectarWhatsapp, enviarTexto, baixarMidia, interpretar } from './whatsapp.js';
 import { iniciarInstagram, estadoInstagram } from './instagram.js';
 
 const PORTA = Number(process.env.PORT || 3000);
@@ -89,6 +89,7 @@ async function webhookWhatsapp(payload) {
   const m = interpretar(payload);
   if (!m || config().pausado === '1') return; // pausado: nem recebe nem responde ninguém
   const responder = (texto) => texto && enviarTexto(m.contato, texto);
+  if (m.tipo === 'video') return responder(config().msg_video);
   if (m.tipo === 'outro') {
     if (Date.now() - (ultimaAjuda.get(m.contato) || 0) > 5 * 60_000) {
       ultimaAjuda.set(m.contato, Date.now());
@@ -181,6 +182,10 @@ async function rota(req, res) {
     }
 
     if (GET && p === '/api/admin/whatsapp/qr') return json(res, 200, { qr: await qrWhatsapp(), estado: await estadoWhatsapp() });
+    if (POST && p === '/api/admin/whatsapp/desconectar') {
+      await desconectarWhatsapp();
+      return json(res, 200, { estado: await estadoWhatsapp() });
+    }
 
     if (POST && p === '/api/admin/config') {
       const rejeitadas = salvarConfig(JSON.parse(await corpo(req, 1e5)));

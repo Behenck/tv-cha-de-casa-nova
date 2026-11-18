@@ -139,9 +139,9 @@ async function destaque() {
 }
 
 async function mural() {
-  if (fotos.length < 6) return;
+  if (fotos.length < 3) return; // poucas fotos: as colunas repetem para preencher
   const escolhidas = (await Promise.all(sorteia(fotos, 40).map(carregar))).filter(Boolean);
-  if (escolhidas.length < 6) return;
+  if (escolhidas.length < 3) return;
   const nCol = innerWidth / innerHeight > 1.5 ? 5 : 3;
   const c = el('section', 'cena mural');
   const colunas = Array.from({ length: nCol }, () => el('div', 'coluna'));
